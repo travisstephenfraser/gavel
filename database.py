@@ -7,10 +7,11 @@ from typing import Any
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "gavel.db"
 if not DB_PATH.exists():
-    fallback_dbs = sorted(
+    fallback_dbs = [
         candidate for candidate in BASE_DIR.glob("*.db") if candidate.name != DB_PATH.name
-    )
-    if fallback_dbs:
+    ]
+    # Tight fallback policy: only auto-adopt when there is a single obvious local DB.
+    if len(fallback_dbs) == 1:
         DB_PATH = fallback_dbs[0]
 
 

@@ -5,19 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gavel</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html {
+      overflow-y: scroll;
+      scrollbar-gutter: stable;
+    }
+  </style>
 </head>
 <body class="min-h-screen bg-slate-100">
-  <header class="bg-slate-900 text-white">
-    <div class="mx-auto max-w-5xl px-6 py-6">
-      <h1 class="text-2xl font-bold">Gavel</h1>
-      <p class="text-sm text-slate-300">Multi-model audit consensus for AI-generated code</p>
+  <header class="bg-slate-950 text-white">
+    <div class="mx-auto max-w-6xl px-6 py-7">
+      <h1 class="text-3xl font-bold tracking-tight">Gavel</h1>
+      <p class="mt-1 text-sm text-slate-300">Multi-model audit consensus for AI-generated code</p>
     </div>
   </header>
-  <main class="mx-auto max-w-5xl px-6 py-8">
+  <main class="mx-auto max-w-6xl px-6 py-8">
     <div class="mb-4">
       <a href="/history" class="inline-flex items-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-300 hover:bg-slate-50">View Eval History</a>
     </div>
     <form id="eval-form" action="/evaluate" method="post" class="space-y-4 rounded-xl bg-white p-6 shadow">
+      <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <p class="text-sm font-semibold text-slate-900">Paste AI-generated code. Get a multi-model verdict in seconds.</p>
+        <p class="mt-1 text-sm text-slate-600">Primary + audit scoring across correctness, security, readability, and robustness.</p>
+      </div>
       {% if source_run %}
       <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <p class="text-sm font-semibold text-blue-900">Fix &amp; Re-evaluate Mode</p>
@@ -49,10 +59,10 @@
         <p class="text-sm font-semibold text-amber-900">Re-eval mode: clicking <strong>Evaluate Code</strong> scores the updated code below (not original run #{{ source_run.id }}).</p>
       </div>
       {% endif %}
-      <textarea id="code_input" name="code_input" required rows="18" class="w-full rounded-md border border-slate-300 p-3 font-mono text-sm" placeholder="Paste AI-generated code here...">{{ prefilled_code if source_run else "" }}</textarea>
+      <textarea id="code_input" name="code_input" required rows="18" class="w-full rounded-md border border-slate-800 bg-slate-900 p-3 font-mono text-sm text-slate-100 placeholder:text-slate-400" placeholder="Paste AI-generated code here...">{{ prefilled_code if source_run else "" }}</textarea>
 
-      <button id="submit-btn" type="submit" class="rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300">
-        Evaluate Code
+      <button id="submit-btn" type="submit" class="w-full rounded-md px-6 py-3 text-base font-bold text-white disabled:cursor-not-allowed sm:w-auto {% if source_run %}bg-emerald-700 hover:bg-emerald-800 disabled:bg-emerald-300{% else %}bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300{% endif %}">
+        {% if source_run %}Re-evaluate Fixed Code{% else %}Evaluate Code{% endif %}
       </button>
       <div id="loading-state" class="hidden space-y-2">
         <div class="flex items-center gap-2">

@@ -6,6 +6,10 @@
   <title>Gavel Results</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    html {
+      overflow-y: scroll;
+      scrollbar-gutter: stable;
+    }
     .pdf-report { display: none; }
 
     .report-body {
@@ -240,7 +244,17 @@
     <section class="grid gap-4 md:grid-cols-2">
       <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
         <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Overall Score</p>
-        <p class="mt-2 text-5xl font-bold text-slate-900">{{ eval_run.overall_score if eval_run.overall_score is not none else "Eval Failed" }}</p>
+        {% set overall_color = "text-slate-900" %}
+        {% if eval_run.overall_score is not none and eval_run.overall_score >= 4 %}
+          {% set overall_color = "text-emerald-700" %}
+        {% elif eval_run.overall_score is not none and eval_run.overall_score >= 3 %}
+          {% set overall_color = "text-amber-600" %}
+        {% elif eval_run.overall_score is not none %}
+          {% set overall_color = "text-red-700" %}
+        {% endif %}
+        <p class="mt-2 text-5xl font-bold {{ overall_color }}">
+          {% if eval_run.overall_score is not none %}{{ eval_run.overall_score }}/5{% else %}Eval Failed{% endif %}
+        </p>
       </div>
       <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
         <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Audit Agreement (&lt;=1 Gap)</p>
@@ -269,11 +283,27 @@
           {% endif %}
           <span class="rounded-full px-3 py-1 text-sm font-semibold ring-1 {{ score_color }}">Final {{ dim.primary_score if dim.primary_score is not none else "Eval Failed" }}/5</span>
         </div>
+        {% set score_pct = (dim.primary_score * 20) if dim.primary_score is not none else 0 %}
+        {% set bar_color = "bg-red-500" %}
+        {% if dim.primary_score is not none and dim.primary_score >= 4 %}
+          {% set bar_color = "bg-emerald-500" %}
+        {% elif dim.primary_score == 3 %}
+          {% set bar_color = "bg-amber-500" %}
+        {% endif %}
+        <div class="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-200">
+          <div class="h-full {{ bar_color }}" style="width: {{ score_pct }}%;"></div>
+        </div>
 
         <div class="mt-4 grid gap-3 text-sm sm:grid-cols-3">
           <p class="rounded-lg bg-slate-50 px-3 py-2"><span class="font-semibold">Primary:</span> {{ dim.primary_score if dim.primary_score is not none else "Eval Failed" }} <span class="ml-1 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">{{ primary_model }}</span></p>
           <p class="rounded-lg bg-slate-50 px-3 py-2"><span class="font-semibold">Audit:</span> {{ dim.audit_score if dim.audit_score is not none else "Eval Failed" }} <span class="ml-1 rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">{{ audit_model }}</span></p>
-          <p class="rounded-lg bg-slate-50 px-3 py-2"><span class="font-semibold">Confidence:</span> {{ dim.confidence }}</p>
+          {% set confidence_color = "bg-red-100 text-red-700" %}
+          {% if dim.confidence == "HIGH" %}
+            {% set confidence_color = "bg-emerald-100 text-emerald-700" %}
+          {% elif dim.confidence == "MEDIUM" %}
+            {% set confidence_color = "bg-amber-100 text-amber-700" %}
+          {% endif %}
+          <p class="rounded-lg bg-slate-50 px-3 py-2"><span class="font-semibold">Confidence:</span> <span class="ml-1 rounded-full px-2 py-0.5 text-xs font-semibold {{ confidence_color }}">{{ dim.confidence }}</span></p>
         </div>
 
         <details class="mt-4 rounded-lg border border-slate-200 p-3">
@@ -288,11 +318,11 @@
       {% endfor %}
     </section>
 
-    <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <section class="rounded-2xl border-l-4 border-blue-500 bg-blue-50/40 p-6 shadow-sm ring-1 ring-blue-100">
       <h2 class="text-2xl font-semibold">Remediation Report</h2>
       <div class="mt-4 space-y-3">
         {% for issue in remediation_issues %}
-        <article class="rounded-xl border border-slate-200 p-4">
+        <article class="rounded-xl border border-slate-200 bg-white p-4">
           <div class="flex flex-wrap items-center gap-2 text-sm">
             <span class="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">{{ issue.dimension }}</span>
             {% set severity_color = "bg-slate-200 text-slate-700" %}
