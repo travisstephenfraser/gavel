@@ -154,6 +154,7 @@ def generate_remediation(
     dimension_meta: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     remediation_model = os.getenv("REMEDIATION_MODEL", os.getenv("PRIMARY_MODEL", "gpt-5.4"))
+    timeout_seconds = int(os.getenv("REMEDIATION_TIMEOUT_SECONDS", "25"))
     code_with_line_numbers = add_line_numbers(code)
     prompt = REMEDIATION_PROMPT.format(
         primary_findings_json=json.dumps(primary_findings_by_dimension, indent=2),
@@ -177,7 +178,7 @@ def generate_remediation(
                     {"role": "user", "content": prompt},
                 ],
                 response_format={"type": "json_object"},
-                timeout=60,
+                timeout=timeout_seconds,
             )
             payload = json.loads(response.choices[0].message.content or "{}")
             raw_issues = payload.get("issues", [])

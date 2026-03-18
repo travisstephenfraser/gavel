@@ -32,6 +32,7 @@ Original Code:
 def generate_autofix_code(original_code: str, agent_prompt: str, language: str = "python") -> dict[str, Any]:
     autofix_model = os.getenv("AUTOFIX_MODEL", os.getenv("AUDIT_MODEL", "gpt-5-mini"))
     fallback_model = os.getenv("AUTOFIX_FALLBACK_MODEL", os.getenv("AUDIT_FALLBACK_MODEL", "gpt-4o-mini"))
+    timeout_seconds = int(os.getenv("AUTOFIX_TIMEOUT_SECONDS", "25"))
     candidate_models = [autofix_model]
     if fallback_model and fallback_model not in candidate_models:
         candidate_models.append(fallback_model)
@@ -54,7 +55,7 @@ def generate_autofix_code(original_code: str, agent_prompt: str, language: str =
                     },
                 ],
                 response_format={"type": "json_object"},
-                timeout=60,
+                timeout=timeout_seconds,
             )
             payload = json.loads(response.choices[0].message.content or "{}")
             fixed_code = payload.get("fixed_code")

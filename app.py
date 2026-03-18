@@ -32,7 +32,7 @@ init_db()
 
 PRIMARY_MODEL = os.getenv("PRIMARY_MODEL", "gpt-5.4")
 AUDIT_MODEL = os.getenv("AUDIT_MODEL", "gpt-5-mini")
-REMEDIATION_MODEL = os.getenv("REMEDIATION_MODEL", PRIMARY_MODEL)
+REMEDIATION_MODEL = os.getenv("REMEDIATION_MODEL", AUDIT_MODEL)
 AUTOFIX_MODEL = os.getenv("AUTOFIX_MODEL", AUDIT_MODEL)
 
 
@@ -57,6 +57,29 @@ def index():
                 remediation_issues=remediation_issues,
                 language=source_run.get("language", "python"),
             )
+            stage_notes = fix_result.get("stage_notes") or []
+            no_stage_applied = not any("applied" in note.lower() for note in stage_notes)
+            unchanged_code = fix_result.get("fixed_code") == source_run.get("code_input", "")
+            # If staged passes produced no concrete code change, fall back to the full agent prompt.
+            if no_stage_applied and unchanged_code:
+                fallback_fix = generate_autofix_code(
+                    original_code=source_run.get("code_input", ""),
+                    agent_prompt=source_run.get("agent_prompt", ""),
+                    language=source_run.get("language", "python"),
+                )
+                fallback_error = fallback_fix.get("error")
+                if not fallback_error and fallback_fix.get("fixed_code"):
+                    fix_result = {
+                        "fixed_code": fallback_fix["fixed_code"],
+                        "error": None,
+                        "stage_notes": [*stage_notes, "Fallback prompt pass: applied."],
+                    }
+                else:
+                    fix_result = {
+                        "fixed_code": source_run.get("code_input", ""),
+                        "error": fallback_error or "Fallback prompt pass did not produce usable code.",
+                        "stage_notes": [*stage_notes, "Fallback prompt pass: unchanged."],
+                    }
         else:
             fix_result = generate_autofix_code(
                 original_code=source_run.get("code_input", ""),

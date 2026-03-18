@@ -22,9 +22,10 @@ INSTRUCTIONS:
 1. Read the code carefully.
 2. Identify specific evidence relevant to this dimension.
 3. Assign a score from 1-5.
-4. Provide a 2-3 sentence justification citing specific lines or patterns.
+4. Provide a concise 1-2 sentence justification citing specific lines or patterns.
 5. For any issue found, provide a specific finding with the line number,
    what's wrong, and how to fix it.
+6. Keep findings concise and return at most 3 findings.
 
 DIMENSION BOUNDARY RULES:
 - Score ONLY the named dimension, not overall code quality.
@@ -88,9 +89,10 @@ INSTRUCTIONS:
 1. Read the code carefully.
 2. Identify specific evidence relevant to this dimension.
 3. Assign a score from 1-5.
-4. Provide a 2-3 sentence justification citing specific lines or patterns.
+4. Provide a concise 1-2 sentence justification citing specific lines or patterns.
 5. For any issue found, provide a specific finding with the line number,
    what's wrong, and how to fix it.
+6. Keep findings concise and return at most 3 findings.
 
 DIMENSION BOUNDARY RULES:
 - Score ONLY the named dimension, not overall code quality.

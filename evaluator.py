@@ -23,6 +23,7 @@ def run_eval(code: str, dimension: tuple[str, str], model: str, role: str = "pri
     )
 
     fallback_model = os.getenv("PRIMARY_FALLBACK_MODEL", "gpt-4o") if role == "primary" else os.getenv("AUDIT_FALLBACK_MODEL", "gpt-4o-mini")
+    timeout_seconds = int(os.getenv("EVAL_TIMEOUT_SECONDS", "30"))
     candidate_models = [model]
     if fallback_model and fallback_model not in candidate_models:
         candidate_models.append(fallback_model)
@@ -38,7 +39,7 @@ def run_eval(code: str, dimension: tuple[str, str], model: str, role: str = "pri
                     {"role": "user", "content": prompt},
                 ],
                 response_format={"type": "json_object"},
-                timeout=60,
+                timeout=timeout_seconds,
             )
             content = response.choices[0].message.content or "{}"
             parsed = json.loads(content)
