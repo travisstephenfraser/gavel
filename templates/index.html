@@ -15,15 +15,31 @@
   </header>
   <main class="mx-auto max-w-5xl px-6 py-8">
     <form id="eval-form" action="/evaluate" method="post" class="space-y-4 rounded-xl bg-white p-6 shadow">
+      {% if source_run %}
+      <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <p class="text-sm font-semibold text-blue-900">Fix &amp; Re-evaluate Mode</p>
+        <p class="mt-1 text-sm text-blue-800">Run #{{ source_run.id }} loaded. Apply fixes to the code below, then submit to compare improvement side-by-side.</p>
+      </div>
+      {% if autofix_message %}
+      <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+        <p class="text-sm font-semibold text-emerald-900">{{ autofix_message }}</p>
+      </div>
+      {% endif %}
+      <input type="hidden" name="previous_eval_run_id" value="{{ source_run.id }}">
+
+      <label for="agent_prompt_context" class="block text-sm font-medium text-slate-700">Agent Prompt Context (from prior run)</label>
+      <textarea id="agent_prompt_context" rows="8" readonly class="w-full rounded-md border border-slate-300 bg-slate-50 p-3 font-mono text-sm text-slate-700">{{ source_run.agent_prompt }}</textarea>
+      {% endif %}
+
       <label for="language" class="block text-sm font-medium text-slate-700">Language</label>
       <select id="language" name="language" class="w-full rounded-md border border-slate-300 px-3 py-2">
-        <option value="python" selected>Python</option>
-        <option value="javascript">JavaScript</option>
-        <option value="typescript">TypeScript</option>
+        <option value="python" {% if source_run and source_run.language == "python" %}selected{% elif not source_run %}selected{% endif %}>Python</option>
+        <option value="javascript" {% if source_run and source_run.language == "javascript" %}selected{% endif %}>JavaScript</option>
+        <option value="typescript" {% if source_run and source_run.language == "typescript" %}selected{% endif %}>TypeScript</option>
       </select>
 
       <label for="code_input" class="block text-sm font-medium text-slate-700">Paste Code</label>
-      <textarea id="code_input" name="code_input" required rows="18" class="w-full rounded-md border border-slate-300 p-3 font-mono text-sm" placeholder="Paste AI-generated code here..."></textarea>
+      <textarea id="code_input" name="code_input" required rows="18" class="w-full rounded-md border border-slate-300 p-3 font-mono text-sm" placeholder="Paste AI-generated code here...">{{ prefilled_code if source_run else "" }}</textarea>
 
       <button id="submit-btn" type="submit" class="rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300">
         Evaluate Code

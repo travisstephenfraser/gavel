@@ -27,6 +27,7 @@ def init_db() -> None:
                 audit_agreement REAL,
                 remediation_json TEXT,
                 agent_prompt TEXT,
+                previous_eval_run_id INTEGER REFERENCES eval_runs(id),
                 status VARCHAR(20) DEFAULT 'pending'
             );
 
@@ -45,16 +46,26 @@ def init_db() -> None:
             );
             """
         )
+        existing_cols = {
+            row["name"] for row in conn.execute("PRAGMA table_info(eval_runs)").fetchall()
+        }
+        if "previous_eval_run_id" not in existing_cols:
+            conn.execute("ALTER TABLE eval_runs ADD COLUMN previous_eval_run_id INTEGER REFERENCES eval_runs(id)")
 
 
-def create_eval_run(code_input: str, language: str = "python", status: str = "pending") -> int:
+def create_eval_run(
+    code_input: str,
+    language: str = "python",
+    status: str = "pending",
+    previous_eval_run_id: int | None = None,
+) -> int:
     with get_connection() as conn:
         cursor = conn.execute(
             """
-            INSERT INTO eval_runs (code_input, language, status)
-            VALUES (?, ?, ?)
+            INSERT INTO eval_runs (code_input, language, status, previous_eval_run_id)
+            VALUES (?, ?, ?, ?)
             """,
-            (code_input, language, status),
+            (code_input, language, status, previous_eval_run_id),
         )
         return int(cursor.lastrowid)
 
@@ -124,4 +135,3 @@ def get_dimension_scores(eval_run_id: int) -> list[dict[str, Any]]:
         item["audit_findings"] = json.loads(item["audit_findings"] or "[]")
         dimensions.append(item)
     return dimensions
-

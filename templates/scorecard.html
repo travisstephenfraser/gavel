@@ -167,8 +167,70 @@
   <main class="app-ui mx-auto max-w-6xl space-y-8 px-6 py-10">
     <section class="flex flex-wrap gap-3 print:hidden">
       <a href="/" class="inline-flex items-center rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-900">Run New Eval</a>
+      <a href="/?from_run_id={{ eval_run.id }}&auto_fix=1" class="inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800">Fix &amp; Re-evaluate</a>
       <button type="button" id="print-btn" class="inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-300 hover:bg-slate-50">Print to PDF</button>
     </section>
+
+    {% if previous_eval_run %}
+    <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <h2 class="text-2xl font-semibold text-slate-900">Re-eval Improvement</h2>
+      <p class="mt-1 text-sm text-slate-600">Comparing current run #{{ eval_run.id }} against prior run #{{ previous_eval_run.id }}.</p>
+
+      <div class="mt-4 grid gap-4 md:grid-cols-2">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Previous Overall</p>
+          <p class="mt-1 text-3xl font-bold text-slate-900">{{ previous_eval_run.overall_score if previous_eval_run.overall_score is not none else "N/A" }}</p>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Current Overall</p>
+          <div class="mt-1 flex items-center gap-2">
+            <p class="text-3xl font-bold text-slate-900">{{ eval_run.overall_score if eval_run.overall_score is not none else "N/A" }}</p>
+            {% if overall_delta is not none %}
+            <span class="rounded-full px-2.5 py-1 text-xs font-semibold {% if overall_delta > 0 %}bg-emerald-100 text-emerald-700{% elif overall_delta < 0 %}bg-red-100 text-red-700{% else %}bg-slate-100 text-slate-700{% endif %}">
+              {% if overall_delta > 0 %}+{% endif %}{{ overall_delta }}
+            </span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-4 py-2 text-left font-semibold text-slate-700">Dimension</th>
+              <th class="px-4 py-2 text-left font-semibold text-slate-700">Previous</th>
+              <th class="px-4 py-2 text-left font-semibold text-slate-700">Current</th>
+              <th class="px-4 py-2 text-left font-semibold text-slate-700">Delta</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for dim in dimensions %}
+            {% set delta = score_deltas.get(dim.dimension) %}
+            {% set prev_match = previous_dimensions | selectattr('dimension', 'equalto', dim.dimension) | list %}
+            {% set prev_score = prev_match[0].primary_score if prev_match else None %}
+            <tr>
+              <td class="px-4 py-2 text-slate-800">{{ dim.dimension }}</td>
+              <td class="px-4 py-2 text-slate-700">{{ prev_score if prev_score is not none else "N/A" }}</td>
+              <td class="px-4 py-2 text-slate-700">{{ dim.primary_score if dim.primary_score is not none else "N/A" }}</td>
+              <td class="px-4 py-2">
+                {% if delta is none %}
+                  <span class="text-slate-500">N/A</span>
+                {% elif delta > 0 %}
+                  <span class="font-semibold text-emerald-700">▲ +{{ delta }}</span>
+                {% elif delta < 0 %}
+                  <span class="font-semibold text-red-700">▼ {{ delta }}</span>
+                {% else %}
+                  <span class="font-semibold text-slate-600">— 0</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% endif %}
 
     <section class="grid gap-4 md:grid-cols-2">
       <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -307,14 +369,14 @@
       <h2 class="report-section-title">Process Flow</h2>
       <div class="flow-grid">
         <div class="flow-card">Code Input</div>
-        <div class="flow-arrow">?</div>
+        <div class="flow-arrow">&rarr;</div>
         <div class="flow-card">Parallel Evals<br>(4 dimensions x 2 models)</div>
-        <div class="flow-arrow">?</div>
+        <div class="flow-arrow">&rarr;</div>
         <div class="flow-card">Reconciliation + Remediation</div>
       </div>
       <div class="report-box blue">
         <strong>Closed loop.</strong>
-        Agent writes code ? AgentGrade evaluates ? remediation prompt generated ? agent fixes code ? re-evaluate.
+        Agent writes code &rarr; AgentGrade evaluates &rarr; remediation prompt generated &rarr; agent fixes code &rarr; re-evaluate.
       </div>
 
       <h2 class="report-section-title">High-Level Architecture</h2>
@@ -436,4 +498,5 @@
   </script>
 </body>
 </html>
+
 
