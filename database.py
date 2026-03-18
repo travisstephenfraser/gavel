@@ -5,7 +5,13 @@ from typing import Any
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "agentgrade.db"
+DB_PATH = BASE_DIR / "gavel.db"
+if not DB_PATH.exists():
+    fallback_dbs = sorted(
+        candidate for candidate in BASE_DIR.glob("*.db") if candidate.name != DB_PATH.name
+    )
+    if fallback_dbs:
+        DB_PATH = fallback_dbs[0]
 
 
 def get_connection() -> sqlite3.Connection:

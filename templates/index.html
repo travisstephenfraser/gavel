@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AgentGrade</title>
+  <title>Gavel</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-slate-100">
   <header class="bg-slate-900 text-white">
     <div class="mx-auto max-w-5xl px-6 py-6">
-      <h1 class="text-2xl font-bold">AgentGrade</h1>
+      <h1 class="text-2xl font-bold">Gavel</h1>
       <p class="text-sm text-slate-300">Multi-model audit consensus for AI-generated code</p>
     </div>
   </header>
@@ -30,8 +30,10 @@
       {% endif %}
       <input type="hidden" name="previous_eval_run_id" value="{{ source_run.id }}">
 
-      <label for="agent_prompt_context" class="block text-sm font-medium text-slate-700">Agent Prompt Context (from prior run)</label>
-      <textarea id="agent_prompt_context" rows="8" readonly class="w-full rounded-md border border-slate-300 bg-slate-50 p-3 font-mono text-sm text-slate-700">{{ source_run.agent_prompt }}</textarea>
+      <details class="rounded-lg border border-slate-200 bg-white p-3">
+        <summary class="cursor-pointer text-sm font-semibold text-slate-700">Show Agent Prompt Context (prior run)</summary>
+        <textarea id="agent_prompt_context" rows="8" readonly class="mt-3 w-full rounded-md border border-slate-300 bg-slate-50 p-3 font-mono text-sm text-slate-700">{{ source_run.agent_prompt }}</textarea>
+      </details>
       {% endif %}
 
       <label for="language" class="block text-sm font-medium text-slate-700">Language</label>
@@ -44,11 +46,7 @@
       <label for="code_input" class="block text-sm font-medium text-slate-700">Paste Code</label>
       {% if source_run %}
       <div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
-        <p class="text-sm font-semibold text-amber-900">Re-eval Input Confirmation</p>
-        <p class="mt-1 text-sm text-amber-800">
-          The code in the field below is the candidate updated code for this re-evaluation run.
-          When you click <strong>Evaluate Code</strong>, AgentGrade will score this updated code (not the original run #{{ source_run.id }} code).
-        </p>
+        <p class="text-sm font-semibold text-amber-900">Re-eval mode: clicking <strong>Evaluate Code</strong> scores the updated code below (not original run #{{ source_run.id }}).</p>
       </div>
       {% endif %}
       <textarea id="code_input" name="code_input" required rows="18" class="w-full rounded-md border border-slate-300 p-3 font-mono text-sm" placeholder="Paste AI-generated code here...">{{ prefilled_code if source_run else "" }}</textarea>
@@ -56,16 +54,24 @@
       <button id="submit-btn" type="submit" class="rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300">
         Evaluate Code
       </button>
-      <p id="loading-text" class="hidden text-sm text-slate-600">Processing... running 8 model checks in parallel.</p>
+      <div id="loading-state" class="hidden space-y-2">
+        <div class="flex items-center gap-2">
+          <svg class="h-4 w-4 animate-spin text-blue-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.25" stroke-width="3"></circle>
+            <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+          </svg>
+          <p id="loading-text" class="text-sm font-medium text-slate-700">Processing... running 8 model checks in parallel.</p>
+        </div>
+      </div>
     </form>
   </main>
   <script>
     const form = document.getElementById("eval-form");
     const submitBtn = document.getElementById("submit-btn");
-    const loadingText = document.getElementById("loading-text");
+    const loadingState = document.getElementById("loading-state");
     form.addEventListener("submit", () => {
       submitBtn.disabled = true;
-      loadingText.classList.remove("hidden");
+      loadingState.classList.remove("hidden");
       submitBtn.textContent = "Evaluating...";
     });
   </script>

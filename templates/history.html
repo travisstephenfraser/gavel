@@ -1,16 +1,16 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AgentGrade History</title>
+  <title>Gavel History</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-900">
   <header class="bg-slate-950 text-white">
     <div class="mx-auto max-w-6xl px-6 py-7">
       <h1 class="text-3xl font-bold tracking-tight">Evaluation History</h1>
-      <p class="mt-1 text-sm text-slate-300">Past AgentGrade runs with score trends and quick re-eval actions.</p>
+      <p class="mt-1 text-sm text-slate-300">Past Gavel runs with score trends and quick re-eval actions.</p>
     </div>
   </header>
 
@@ -21,13 +21,13 @@
 
     <section class="grid gap-4">
       {% for run in runs %}
-      <article class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <article class="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 {% if run.previous_eval_run_id %}border-l-4 border-l-emerald-500{% endif %}">
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Run #{{ run.id }}</p>
-            <p class="mt-1 text-sm text-slate-600">{{ run.created_at }} • {{ run.language|upper }} • {{ run.status|upper }}</p>
+            <p class="mt-1 text-sm text-slate-600">{{ run.created_at }} &bull; {{ run.language|upper }} &bull; {{ run.status|upper }}</p>
             {% if run.previous_eval_run_id %}
-            <p class="mt-1 text-xs text-slate-500">Re-eval linked to run #{{ run.previous_eval_run_id }}</p>
+            <p class="mt-1 text-xs"><span class="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">↳ Re-eval of #{{ run.previous_eval_run_id }}</span></p>
             {% endif %}
           </div>
           <div class="flex flex-wrap gap-2">

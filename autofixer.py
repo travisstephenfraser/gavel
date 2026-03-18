@@ -1,6 +1,6 @@
 ﻿import json
 import os
-from typing import Any
+from typing import Any, Iterable
 
 from openai import OpenAI
 
@@ -68,3 +68,83 @@ def generate_autofix_code(original_code: str, agent_prompt: str, language: str =
         return {"fixed_code": original_code, "error": f"Autofix failed: {last_exc}"}
     return {"fixed_code": original_code, "error": "Autofix did not return usable code."}
 
+
+def _can_compile(code: str, language: str) -> tuple[bool, str | None]:
+    if (language or "").lower() != "python":
+        return True, None
+    try:
+        compile(code, "<autofix>", "exec")
+        return True, None
+    except Exception as exc:
+        return False, f"Compile check failed: {exc}"
+
+
+def _build_stage_prompt(issues: Iterable[dict[str, Any]], stage_name: str) -> str:
+    lines = [
+        f"Apply only the {stage_name.upper()} issues listed below.",
+        "Keep behavior stable outside these fixes.",
+        "Preserve clear outcome semantics where relevant: success, not-found, and failure should remain distinguishable.",
+        "",
+    ]
+    count = 0
+    for count, issue in enumerate(issues, start=1):
+        line = issue.get("line")
+        line_hint = f" (line {line})" if isinstance(line, int) else ""
+        fix = str(issue.get("fix") or "").strip()
+        if fix:
+            lines.append(f"{count}. {fix}{line_hint}")
+    if count == 0:
+        return ""
+    return "\n".join(lines)
+
+
+def _issues_for_stage(issues: list[dict[str, Any]], severity: str) -> list[dict[str, Any]]:
+    return [issue for issue in issues if str(issue.get("severity", "")).lower() == severity]
+
+
+def generate_staged_autofix_code(
+    original_code: str,
+    remediation_issues: list[dict[str, Any]],
+    language: str = "python",
+) -> dict[str, Any]:
+    current_code = original_code
+    stage_notes: list[str] = []
+
+    for stage in ("critical", "major"):
+        stage_issues = _issues_for_stage(remediation_issues, stage)
+        if not stage_issues:
+            stage_notes.append(f"{stage.title()}: no issues.")
+            continue
+
+        stage_prompt = _build_stage_prompt(stage_issues, stage)
+        if not stage_prompt:
+            stage_notes.append(f"{stage.title()}: no usable fix instructions.")
+            continue
+
+        result = generate_autofix_code(current_code, stage_prompt, language=language)
+        if result.get("error"):
+            stage_notes.append(f"{stage.title()}: skipped ({result['error']}).")
+            continue
+
+        candidate_code = str(result.get("fixed_code") or current_code)
+        valid, compile_error = _can_compile(candidate_code, language)
+        if not valid:
+            stage_notes.append(f"{stage.title()}: rejected ({compile_error}).")
+            continue
+
+        current_code = candidate_code
+        stage_notes.append(f"{stage.title()}: applied.")
+
+    final_valid, final_compile_error = _can_compile(current_code, language)
+    if not final_valid:
+        return {
+            "fixed_code": original_code,
+            "error": final_compile_error or "Compile check failed.",
+            "stage_notes": stage_notes,
+        }
+
+    return {
+        "fixed_code": current_code,
+        "error": None,
+        "stage_notes": stage_notes,
+    }

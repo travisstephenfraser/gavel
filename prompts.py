@@ -37,6 +37,10 @@ DIMENSION BOUNDARY RULES:
 - For Correctness specifically: do NOT lower score for SQL injection or secret handling unless it breaks functional output for normal valid input.
 - For Readability specifically: avoid security-only findings unless they directly reduce clarity or maintainability.
 - For Robustness specifically: treat security vulnerabilities as Security issues unless they directly create runtime failure/exception handling gaps.
+- Outcome semantics rule (general reliability): when code has multiple outcomes,
+  avoid collapsing them into a single sentinel (for example, using the same return
+  value for success-empty, expected not-found, and runtime failure). For Robustness,
+  treat indistinguishable failure/not-found behavior as a real issue when present.
 
 CALIBRATION ANCHOR:
 - If code functionally returns expected values but uses unsafe SQL string interpolation:
@@ -99,6 +103,10 @@ DIMENSION BOUNDARY RULES:
 - For Correctness specifically: do NOT lower score for SQL injection or secret handling unless it breaks functional output for normal valid input.
 - For Readability specifically: avoid security-only findings unless they directly reduce clarity or maintainability.
 - For Robustness specifically: treat security vulnerabilities as Security issues unless they directly create runtime failure/exception handling gaps.
+- Outcome semantics rule (general reliability): when code has multiple outcomes,
+  avoid collapsing them into a single sentinel (for example, using the same return
+  value for success-empty, expected not-found, and runtime failure). For Robustness,
+  treat indistinguishable failure/not-found behavior as a real issue when present.
 
 CALIBRATION ANCHOR:
 - If code functionally returns expected values but uses unsafe SQL string interpolation:
@@ -142,6 +150,9 @@ RULES:
   can implement it without additional context.
 - Generate an agent_prompt at the end: a plain-English instruction block
   that can be copy-pasted directly into a coding agent.
+- Prefer fixes that preserve API shape unless behavior is ambiguous; if behavior
+  is ambiguous, require explicit outcome semantics so success, expected-empty
+  (e.g., not found), and operational failure remain distinguishable.
 
 SEVERITY CALIBRATION (STRICT):
 - Use "critical" only for issues that can directly cause severe security compromise,

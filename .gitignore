@@ -2,6 +2,7 @@
 .venv/
 __pycache__/
 *.pyc
-agentgrade.db
+gavel.db
+*.db
 tmp_pdf_preview/
 test_report/

@@ -1,6 +1,6 @@
-﻿# AgentGrade
+﻿# Gavel
 
-AgentGrade is a quality gate for AI-generated code.
+Gavel is a quality gate for AI-generated code.
 
 It evaluates code across four dimensions using a primary and audit model, reconciles confidence, generates executable remediation instructions, and supports an in-app closed loop for fix + re-evaluation.
 
@@ -8,7 +8,7 @@ It evaluates code across four dimensions using a primary and audit model, reconc
 
 Closed loop:
 
-`Agent writes code -> AgentGrade evaluates -> remediation prompt generated -> autofix candidate generated -> re-evaluate -> score deltas`
+`Agent writes code -> Gavel evaluates -> remediation prompt generated -> autofix candidate generated -> re-evaluate -> score deltas`
 
 Core dimensions (exactly four):
 
@@ -78,7 +78,7 @@ Reliability fallbacks are built in:
 - `REMEDIATION_FALLBACK_MODEL` (default `gpt-4o`)
 - `AUTOFIX_FALLBACK_MODEL` (default `gpt-4o-mini`)
 
-If the primary configured model fails, AgentGrade automatically attempts the fallback model before returning an eval failure.
+If the primary configured model fails, Gavel automatically attempts the fallback model before returning an eval failure.
 
 ## UX Features
 
@@ -94,7 +94,9 @@ If the primary configured model fails, AgentGrade automatically attempts the fal
 
 - `Fix & Re-evaluate` button on results page
 - Supports `auto_fix=1` mode:
-  - generates candidate fixed code from prior `agent_prompt`
+  - applies staged autofix passes from remediation issues (`critical` then `major`)
+  - compile-gates Python output before prefill
+  - falls back to prompt-based autofix if structured issues are unavailable
   - prefills re-eval `code_input`
 - Re-eval run is linked via `previous_eval_run_id`
 - Results page shows side-by-side score deltas
@@ -135,7 +137,7 @@ database.py               SQLite schema + helpers
 evaluator.py              run_eval(code, dimension, model, role)
 reconciler.py             score gap/confidence + aggregate metrics
 remediator.py             remediation synthesis
-autofixer.py              candidate fix generation from agent_prompt
+autofixer.py              staged autofix + compile gating + fallback prompt fix
 prompts.py                evaluator/audit/remediation prompt templates
 env_loader.py             lightweight .env loader
 templates/index.html      code input + re-eval prefill UX
@@ -156,6 +158,8 @@ Two core tables:
 
 See `database.py` for exact `CREATE TABLE` definitions.
 
+Note: local DB defaults to `gavel.db` with compatibility fallback to an existing `.db` file in project root.
+
 ## Routes
 
 - `GET /`
@@ -172,7 +176,7 @@ See `database.py` for exact `CREATE TABLE` definitions.
 ## Running Locally
 
 ```powershell
-cd c:\Users\tfras\CODEX\AgentGrade
+cd <project-root>
 .\.venv\Scripts\python -m flask --app app run --debug
 ```
 
@@ -206,3 +210,4 @@ Recommended sequence:
 4. Re-evaluate updated code
 5. Show improvement panel + score deltas
 6. Show `/history` to prove persistence and repeatability
+

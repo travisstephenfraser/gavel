@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from flask import Flask, redirect, render_template, request, url_for
 
-from autofixer import generate_autofix_code
+from autofixer import generate_autofix_code, generate_staged_autofix_code
 from database import (
     create_eval_run,
     get_eval_history,
@@ -26,7 +26,7 @@ from remediator import generate_remediation
 
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "agentgrade-dev"
+app.config["SECRET_KEY"] = "gavel-dev"
 load_env_file()
 init_db()
 
@@ -44,16 +44,32 @@ def index():
     prefilled_code = source_run.get("code_input", "") if source_run else ""
     autofix_message = None
     if source_run and auto_fix:
-        fix_result = generate_autofix_code(
-            original_code=source_run.get("code_input", ""),
-            agent_prompt=source_run.get("agent_prompt", ""),
-            language=source_run.get("language", "python"),
-        )
+        remediation_payload = {}
+        try:
+            remediation_payload = json.loads(source_run.get("remediation_json") or "{}")
+        except json.JSONDecodeError:
+            remediation_payload = {}
+
+        remediation_issues = remediation_payload.get("issues") or []
+        if isinstance(remediation_issues, list) and remediation_issues:
+            fix_result = generate_staged_autofix_code(
+                original_code=source_run.get("code_input", ""),
+                remediation_issues=remediation_issues,
+                language=source_run.get("language", "python"),
+            )
+        else:
+            fix_result = generate_autofix_code(
+                original_code=source_run.get("code_input", ""),
+                agent_prompt=source_run.get("agent_prompt", ""),
+                language=source_run.get("language", "python"),
+            )
         prefilled_code = fix_result["fixed_code"]
+        stage_notes = fix_result.get("stage_notes") or []
+        stage_summary = f" ({' '.join(stage_notes)})" if stage_notes else ""
         autofix_message = (
-            "Auto-fix generated from the agent prompt. Review before submitting."
+            f"Auto-fix generated from remediation issues with compile gating.{stage_summary}"
             if not fix_result["error"]
-            else f"{fix_result['error']} Showing original code instead."
+            else f"{fix_result['error']} Showing original code instead.{stage_summary}"
         )
 
     return render_template(
@@ -109,10 +125,17 @@ def evaluate():
 
     primary_findings = {}
     audit_findings = {}
+    dimension_meta = {}
     for dim_name, _desc in DIMENSIONS:
         primary = primary_results.get(dim_name, {"score": None, "justification": "Missing primary result", "findings": []})
         audit = audit_results.get(dim_name, {"score": None, "justification": "Missing audit result", "findings": []})
         confidence, score_gap = confidence_for_scores(primary.get("score"), audit.get("score"))
+        dimension_meta[dim_name] = {
+            "primary_score": primary.get("score"),
+            "audit_score": audit.get("score"),
+            "confidence": confidence,
+            "score_gap": score_gap,
+        }
 
         primary_findings[dim_name] = primary.get("findings", [])
         audit_findings[dim_name] = audit.get("findings", [])
@@ -130,7 +153,12 @@ def evaluate():
             score_gap=score_gap,
         )
 
-    remediation = generate_remediation(code_input, primary_findings, audit_findings)
+    remediation = generate_remediation(
+        code_input,
+        primary_findings,
+        audit_findings,
+        dimension_meta=dimension_meta,
+    )
     overall_score = compute_overall_score(primary_results)
     audit_agreement = compute_audit_agreement(primary_results, audit_results)
 
