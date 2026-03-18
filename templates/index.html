@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -14,9 +14,12 @@
 </head>
 <body class="min-h-screen bg-slate-100">
   <header class="bg-slate-950 text-white">
-    <div class="mx-auto max-w-6xl px-6 py-7">
-      <h1 class="text-3xl font-bold tracking-tight">Gavel</h1>
-      <p class="mt-1 text-sm text-slate-300">Multi-model audit consensus for AI-generated code</p>
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-7">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Gavel</h1>
+        <p class="mt-1 text-sm text-slate-300">Multi-model audit consensus for AI-generated code</p>
+      </div>
+      <img src="{{ url_for('static', filename='gavel.png') }}" alt="Gavel logo" class="h-12 w-12 object-contain invert sm:h-14 sm:w-14">
     </div>
   </header>
   <main class="mx-auto max-w-6xl px-6 py-8">

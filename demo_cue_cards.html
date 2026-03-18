@@ -1,0 +1,196 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gavel Demo Cue Cards</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --accent: #22c55e;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0%, var(--bg) 45%);
+      color: var(--text);
+      line-height: 1.45;
+      padding: 28px;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .title {
+      font-size: 48px;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: 0.3px;
+    }
+    .subtitle {
+      margin-top: 8px;
+      font-size: 22px;
+      color: var(--muted);
+    }
+    .hint {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #93c5fd;
+    }
+    .grid {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .card {
+      background: linear-gradient(180deg, #111827, #0b1220);
+      border: 1px solid var(--border);
+      border-left: 6px solid var(--accent);
+      border-radius: 14px;
+      padding: 18px 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .badge {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0b1220;
+      background: #86efac;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .time {
+      font-size: 16px;
+      font-weight: 700;
+      color: #e2e8f0;
+      background: #1f2937;
+      border: 1px solid #475569;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+    .action {
+      font-size: 17px;
+      color: #fcd34d;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .script {
+      font-size: 31px;
+      font-weight: 600;
+      letter-spacing: 0.1px;
+      line-height: 1.38;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+    .footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+    @media print {
+      body { background: #fff; color: #111; }
+      .card { box-shadow: none; background: #fff; border-color: #ccc; }
+      .script { color: #111; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="title">Gavel Demo Cue Cards</h1>
+    <div class="subtitle">3-minute pre-recorded script</div>
+    <div class="hint">Tip: zoom browser to 110-125% for even larger teleprompter-style reading.</div>
+
+    <div class="grid">
+      <section class="card">
+        <div class="meta">
+          <span class="badge">Slide 1-3</span>
+          <span class="time">0:00-0:55</span>
+        </div>
+        <div class="action">Show title/problem/solution slides.</div>
+        <p class="script">AI coding is exploding, especially among vibe-coders and non-engineers.
+They can generate code fast, but verification is still manual.
+
+Gavel is a quality gate for AI-generated code.
+It runs independent multi-model audits, reconciles confidence, and generates executable remediation.
+
+In short: evaluate, fix, and re-evaluate in one closed loop.</p>
+      </section>
+
+      <section class="card">
+        <div class="meta">
+          <span class="badge">Slide 4</span>
+          <span class="time">0:55-1:05</span>
+        </div>
+        <div class="action">Open app, paste <code>sql_injection.py</code>, click Evaluate.</div>
+        <p class="script">This sample contains SQL injection through string interpolation in a database query.
+Let's run it through Gavel.</p>
+      </section>
+
+      <section class="card">
+        <div class="meta">
+          <span class="badge">Slide 5</span>
+          <span class="time">1:05-1:30</span>
+        </div>
+        <div class="action">Show scorecard and dimension cards.</div>
+        <p class="script">Gavel scores four dimensions: correctness, security, readability, and robustness,
+using two independent models in parallel.
+
+Confidence and agreement show where verdicts are strong.
+In this case, security is clearly weak and flagged with high confidence.</p>
+      </section>
+
+      <section class="card">
+        <div class="meta">
+          <span class="badge">Slide 6</span>
+          <span class="time">1:30-1:50</span>
+        </div>
+        <div class="action">Scroll to Remediation Report.</div>
+        <p class="script">Now Gavel synthesizes findings into an actionable remediation report:
+severity, line context, and specific fix instructions the coding agent can execute.</p>
+      </section>
+
+      <section class="card">
+        <div class="meta">
+          <span class="badge">Slide 7-8</span>
+          <span class="time">1:50-2:30</span>
+        </div>
+        <div class="action">Click Fix &amp; Re-evaluate, then Re-evaluate Fixed Code; show delta.</div>
+        <p class="script">This is the closed loop.
+Gavel applies staged autofix from remediation, compile-checks output, and pre-fills updated code.
+
+After re-evaluation, we get before-and-after deltas per dimension and an improved overall score.
+No human translation step between diagnosis and agent action.</p>
+      </section>
+
+      <section class="card">
+        <div class="meta">
+          <span class="badge">Slide 9-10</span>
+          <span class="time">2:30-3:00</span>
+        </div>
+        <div class="action">Show market + close slide.</div>
+        <p class="script">Our wedge is the fast-growing segment of new AI coders who can generate code,
+but cannot build robust verification stacks.
+
+Most tools stop at dashboards.
+Gavel closes the loop: evaluate, remediate, fix, re-evaluate.
+
+Built with coding agents, evaluates coding agents, and closes the loop.</p>
+      </section>
+    </div>
+
+    <div class="footer">File: <code>AgentGrade/demo_cue_cards.html</code></div>
+  </div>
+</body>
+</html>

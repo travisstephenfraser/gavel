@@ -14,9 +14,12 @@
 </head>
 <body class="min-h-screen bg-slate-100 text-slate-900">
   <header class="bg-slate-950 text-white">
-    <div class="mx-auto max-w-6xl px-6 py-7">
-      <h1 class="text-3xl font-bold tracking-tight">Evaluation History</h1>
-      <p class="mt-1 text-sm text-slate-300">Past Gavel runs with score trends and quick re-eval actions.</p>
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-7">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight">Evaluation History</h1>
+        <p class="mt-1 text-sm text-slate-300">Past Gavel runs with score trends and quick re-eval actions.</p>
+      </div>
+      <img src="{{ url_for('static', filename='gavel.png') }}" alt="Gavel logo" class="h-12 w-12 object-contain invert sm:h-14 sm:w-14">
     </div>
   </header>
 
