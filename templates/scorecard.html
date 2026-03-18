@@ -1,0 +1,439 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentGrade Results</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .pdf-report { display: none; }
+
+    .report-body {
+      font-family: 'Calibri', 'Segoe UI', system-ui, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.5;
+      color: #1a1a1a;
+      max-width: 8.5in;
+      margin: 0 auto;
+      padding: 0.75in;
+      background: #fff;
+    }
+    .report-header {
+      border-bottom: 3px solid #0f2b46;
+      padding-bottom: 14px;
+      margin-bottom: 24px;
+    }
+    .report-header h1 {
+      font-size: 20pt;
+      color: #0f2b46;
+      font-weight: 700;
+      margin: 0 0 3px 0;
+    }
+    .report-subtitle { font-size: 11pt; color: #64748b; margin-bottom: 2px; }
+    .report-date { font-size: 9.5pt; color: #94a3b8; }
+
+    .report-section-title {
+      font-size: 13pt;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #0f2b46;
+      border-bottom: 2px solid #d0d8e0;
+      padding-bottom: 6px;
+      margin: 22px 0 12px 0;
+      font-weight: 700;
+    }
+
+    .report-stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .report-stat-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      padding: 12px;
+      text-align: center;
+    }
+    .report-stat-value {
+      font-size: 20pt;
+      font-weight: 700;
+      color: #0f2b46;
+      line-height: 1.15;
+    }
+    .report-stat-value.danger { color: #b71c1c; }
+    .report-stat-value.warn { color: #f57f17; }
+    .report-stat-label {
+      font-size: 8.5pt;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 0.3px;
+      margin-top: 2px;
+    }
+
+    .report-box {
+      padding: 12px 14px;
+      border-radius: 5px;
+      border-left: 4px solid;
+      margin: 12px 0;
+      background: #f8fafc;
+      border-color: #e2e8f0;
+    }
+    .report-box.blue { background: #eff6ff; border-color: #93c5fd; }
+    .report-box.amber { background: #fffbeb; border-color: #fcd34d; }
+    .report-box.red { background: #fef2f2; border-color: #ef9a9a; }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin: 10px 0;
+    }
+    .report-table thead tr {
+      background: #0f2b46;
+      color: #fff;
+      font-size: 8.5pt;
+      text-transform: uppercase;
+    }
+    .report-table th, .report-table td {
+      padding: 7px 10px;
+      border: 1px solid #d0d8e0;
+      text-align: left;
+      vertical-align: top;
+    }
+    .report-table tbody tr:nth-child(even) { background: #f8f9fb; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 8.5pt;
+      font-weight: 600;
+    }
+    .badge-green { background: #c8e6c9; color: #1b5e20; }
+    .badge-yellow { background: #fff9c4; color: #f57f17; }
+    .badge-red { background: #ef9a9a; color: #b71c1c; }
+    .badge-gray { background: #e2e8f0; color: #475569; }
+    .badge-blue { background: #bbdefb; color: #0d47a1; }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .flow-card {
+      border: 1px solid #d0d8e0;
+      background: #f8fafc;
+      border-radius: 6px;
+      padding: 9px;
+      font-size: 9pt;
+      text-align: center;
+      font-weight: 600;
+      color: #0f2b46;
+    }
+    .flow-arrow {
+      font-size: 12pt;
+      color: #64748b;
+      text-align: center;
+    }
+
+    @page { margin: 0.75in; }
+    @media print {
+      body { background: #fff !important; }
+      .app-ui, header { display: none !important; }
+      .pdf-report { display: block !important; }
+      .report-body { padding: 0; }
+      .report-stat-card, .report-box, .badge, .flow-card, .report-table thead tr {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .report-table, .report-box, .report-stat-card, .report-section-title, .flow-grid {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900">
+  <header class="bg-slate-950 text-white">
+    <div class="mx-auto max-w-6xl px-6 py-7">
+      <h1 class="text-3xl font-bold tracking-tight">AgentGrade</h1>
+      <p class="mt-1 text-sm text-slate-300">Multi-model audit consensus for AI-generated code</p>
+    </div>
+  </header>
+
+  <main class="app-ui mx-auto max-w-6xl space-y-8 px-6 py-10">
+    <section class="flex flex-wrap gap-3 print:hidden">
+      <a href="/" class="inline-flex items-center rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-900">Run New Eval</a>
+      <button type="button" id="print-btn" class="inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-300 hover:bg-slate-50">Print to PDF</button>
+    </section>
+
+    <section class="grid gap-4 md:grid-cols-2">
+      <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Overall Score</p>
+        <p class="mt-2 text-5xl font-bold text-slate-900">{{ eval_run.overall_score if eval_run.overall_score is not none else "Eval Failed" }}</p>
+      </div>
+      <div class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Audit Agreement (&lt;=1 Gap)</p>
+        <p class="mt-2 text-5xl font-bold text-slate-900">{{ eval_run.audit_agreement if eval_run.audit_agreement is not none else "Eval Failed" }}%</p>
+      </div>
+    </section>
+
+    <section class="space-y-4">
+      {% for dim in dimensions %}
+      <article class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <h2 class="text-xl font-semibold">{{ dim.dimension }}</h2>
+          {% set score_color = "bg-red-100 text-red-700 ring-red-200" %}
+          {% if dim.primary_score is not none and dim.primary_score >= 4 %}
+            {% set score_color = "bg-emerald-100 text-emerald-700 ring-emerald-200" %}
+          {% elif dim.primary_score == 3 %}
+            {% set score_color = "bg-amber-100 text-amber-700 ring-amber-200" %}
+          {% endif %}
+          <span class="rounded-full px-3 py-1 text-sm font-semibold ring-1 {{ score_color }}">Final {{ dim.primary_score if dim.primary_score is not none else "Eval Failed" }}/5</span>
+        </div>
+
+        <div class="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+          <p class="rounded-lg bg-slate-50 px-3 py-2"><span class="font-semibold">Primary:</span> {{ dim.primary_score if dim.primary_score is not none else "Eval Failed" }}</p>
+          <p class="rounded-lg bg-slate-50 px-3 py-2"><span class="font-semibold">Audit:</span> {{ dim.audit_score if dim.audit_score is not none else "Eval Failed" }}</p>
+          <p class="rounded-lg bg-slate-50 px-3 py-2"><span class="font-semibold">Confidence:</span> {{ dim.confidence }}</p>
+        </div>
+
+        <details class="mt-4 rounded-lg border border-slate-200 p-3">
+          <summary class="cursor-pointer font-medium text-slate-700">Primary Justification</summary>
+          <p class="mt-2 text-sm text-slate-700">{{ dim.primary_justification }}</p>
+        </details>
+        <details class="mt-3 rounded-lg border border-slate-200 p-3">
+          <summary class="cursor-pointer font-medium text-slate-700">Audit Justification</summary>
+          <p class="mt-2 text-sm text-slate-700">{{ dim.audit_justification }}</p>
+        </details>
+      </article>
+      {% endfor %}
+    </section>
+
+    <section class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+      <h2 class="text-2xl font-semibold">Remediation Report</h2>
+      <div class="mt-4 space-y-3">
+        {% for issue in remediation_issues %}
+        <article class="rounded-xl border border-slate-200 p-4">
+          <div class="flex flex-wrap items-center gap-2 text-sm">
+            <span class="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">{{ issue.dimension }}</span>
+            {% set severity_color = "bg-slate-200 text-slate-700" %}
+            {% if issue.severity == "critical" %}
+              {% set severity_color = "bg-red-100 text-red-700" %}
+            {% elif issue.severity == "major" %}
+              {% set severity_color = "bg-orange-100 text-orange-700" %}
+            {% endif %}
+            <span class="rounded-full px-2.5 py-1 font-semibold {{ severity_color }}">{{ issue.severity|upper }}</span>
+            <span class="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">Line {{ issue.line if issue.line is not none else "N/A" }}</span>
+          </div>
+          <p class="mt-3 text-sm leading-6 text-slate-900"><span class="font-semibold">Finding:</span> {{ issue.finding }}</p>
+          <p class="mt-1 text-sm leading-6 text-slate-700"><span class="font-semibold">Fix:</span> {{ issue.fix }}</p>
+        </article>
+        {% else %}
+        <p class="text-slate-600">No remediation issues generated.</p>
+        {% endfor %}
+      </div>
+
+      <div class="mt-7">
+        <button id="copy-btn" class="inline-flex items-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">Copy Agent Prompt</button>
+        <span id="copy-feedback" class="ml-3 text-sm font-medium text-emerald-700"></span>
+      </div>
+      <textarea id="agent-prompt" class="mt-4 h-52 w-full rounded-lg border border-slate-300 p-3 font-mono text-sm text-slate-800">{{ eval_run.agent_prompt }}</textarea>
+    </section>
+  </main>
+
+  <section class="pdf-report">
+    <div class="report-body">
+      <div class="report-header">
+        <h1>AgentGrade Diagnostic Report</h1>
+        <div class="report-subtitle">Multi-model audit consensus for AI-generated code</div>
+        <div class="report-date">Run #{{ eval_run.id }} • {{ eval_run.created_at }} • Language: {{ eval_run.language }}</div>
+      </div>
+
+      <h2 class="report-section-title">Executive Summary</h2>
+      <div class="report-stat-row">
+        <div class="report-stat-card">
+          <div class="report-stat-value">{{ eval_run.overall_score if eval_run.overall_score is not none else "N/A" }}</div>
+          <div class="report-stat-label">Overall Score</div>
+        </div>
+        <div class="report-stat-card">
+          <div class="report-stat-value {% if eval_run.audit_agreement is not none and eval_run.audit_agreement < 80 %}warn{% endif %}">{{ eval_run.audit_agreement if eval_run.audit_agreement is not none else "N/A" }}%</div>
+          <div class="report-stat-label">Audit Agreement (&lt;=1 Gap)</div>
+        </div>
+        <div class="report-stat-card">
+          <div class="report-stat-value">{{ dimensions|length }}</div>
+          <div class="report-stat-label">Dimensions Scored</div>
+        </div>
+        <div class="report-stat-card">
+          <div class="report-stat-value {% if remediation_issues|length > 0 %}danger{% endif %}">{{ remediation_issues|length }}</div>
+          <div class="report-stat-label">Remediation Issues</div>
+        </div>
+      </div>
+
+      <div class="report-box red">
+        <strong>Purpose.</strong>
+        This report summarizes primary and audit model scoring for code quality, then synthesizes a machine-executable remediation plan for the coding agent.
+      </div>
+
+      <h2 class="report-section-title">Evaluator Setup</h2>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Model</th>
+            <th>Responsibility</th>
+            <th>Output</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-blue">Primary</span></td>
+            <td>gpt-4o</td>
+            <td>Final dimension score source</td>
+            <td>Score, justification, findings</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-gray">Audit</span></td>
+            <td>gpt-4o-mini</td>
+            <td>Independent confidence check</td>
+            <td>Score, justification, findings</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 class="report-section-title">Process Flow</h2>
+      <div class="flow-grid">
+        <div class="flow-card">Code Input</div>
+        <div class="flow-arrow">?</div>
+        <div class="flow-card">Parallel Evals<br>(4 dimensions x 2 models)</div>
+        <div class="flow-arrow">?</div>
+        <div class="flow-card">Reconciliation + Remediation</div>
+      </div>
+      <div class="report-box blue">
+        <strong>Closed loop.</strong>
+        Agent writes code ? AgentGrade evaluates ? remediation prompt generated ? agent fixes code ? re-evaluate.
+      </div>
+
+      <h2 class="report-section-title">High-Level Architecture</h2>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Component</th>
+            <th>Function</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Web</td><td>Flask Routes</td><td>Input capture, evaluation trigger, results rendering</td></tr>
+          <tr><td>Evaluation</td><td>Evaluator + Reconciler</td><td>8 parallel model calls, score gaps, confidence computation</td></tr>
+          <tr><td>Remediation</td><td>Remediator</td><td>Synthesizes findings into structured issues + agent prompt</td></tr>
+          <tr><td>Persistence</td><td>SQLite</td><td>Stores eval runs, dimension scores, remediation artifacts</td></tr>
+        </tbody>
+      </table>
+
+      <h2 class="report-section-title">Dimension Scorecard</h2>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            <th>Primary</th>
+            <th>Audit</th>
+            <th>Gap</th>
+            <th>Confidence</th>
+            <th>Assessment</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dim in dimensions %}
+          <tr>
+            <td>{{ dim.dimension }}</td>
+            <td>{{ dim.primary_score if dim.primary_score is not none else "N/A" }}</td>
+            <td>{{ dim.audit_score if dim.audit_score is not none else "N/A" }}</td>
+            <td>{{ dim.score_gap if dim.score_gap is not none else "N/A" }}</td>
+            <td>
+              {% if dim.confidence == "HIGH" %}<span class="badge badge-green">HIGH</span>
+              {% elif dim.confidence == "MEDIUM" %}<span class="badge badge-yellow">MEDIUM</span>
+              {% else %}<span class="badge badge-red">LOW</span>{% endif %}
+            </td>
+            <td>
+              {% if dim.primary_score is not none and dim.primary_score >= 4 %}
+                <span class="badge badge-green">Strong</span>
+              {% elif dim.primary_score == 3 %}
+                <span class="badge badge-yellow">Needs Improvement</span>
+              {% else %}
+                <span class="badge badge-red">High Risk</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <h2 class="report-section-title">Remediation Plan</h2>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            <th>Severity</th>
+            <th>Line</th>
+            <th>Finding</th>
+            <th>Fix</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for issue in remediation_issues %}
+          <tr>
+            <td>{{ issue.dimension }}</td>
+            <td>
+              {% if issue.severity == "critical" %}<span class="badge badge-red">CRITICAL</span>
+              {% elif issue.severity == "major" %}<span class="badge badge-yellow">MAJOR</span>
+              {% else %}<span class="badge badge-gray">MINOR</span>{% endif %}
+            </td>
+            <td>{{ issue.line if issue.line is not none else "N/A" }}</td>
+            <td>{{ issue.finding }}</td>
+            <td>{{ issue.fix }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="5">No remediation issues generated.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <h2 class="report-section-title">Agent Prompt</h2>
+      <div class="report-box amber">
+        <strong>Copy-paste prompt for coding agent.</strong>
+        <div style="white-space: pre-wrap; font-size: 9pt; margin-top: 6px;">{{ eval_run.agent_prompt }}</div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const printBtn = document.getElementById("print-btn");
+    const copyBtn = document.getElementById("copy-btn");
+    const feedback = document.getElementById("copy-feedback");
+    const prompt = document.getElementById("agent-prompt");
+    if (printBtn) {
+      printBtn.addEventListener("click", () => {
+        window.print();
+      });
+    }
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(prompt.value);
+          feedback.textContent = "Copied!";
+        } catch (err) {
+          feedback.textContent = "Copy failed. Please copy manually.";
+        }
+        window.setTimeout(() => {
+          feedback.textContent = "";
+        }, 1600);
+      });
+    }
+  </script>
+</body>
+</html>
+

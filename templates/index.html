@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgentGrade</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-100">
+  <header class="bg-slate-900 text-white">
+    <div class="mx-auto max-w-5xl px-6 py-6">
+      <h1 class="text-2xl font-bold">AgentGrade</h1>
+      <p class="text-sm text-slate-300">Multi-model audit consensus for AI-generated code</p>
+    </div>
+  </header>
+  <main class="mx-auto max-w-5xl px-6 py-8">
+    <form id="eval-form" action="/evaluate" method="post" class="space-y-4 rounded-xl bg-white p-6 shadow">
+      <label for="language" class="block text-sm font-medium text-slate-700">Language</label>
+      <select id="language" name="language" class="w-full rounded-md border border-slate-300 px-3 py-2">
+        <option value="python" selected>Python</option>
+        <option value="javascript">JavaScript</option>
+        <option value="typescript">TypeScript</option>
+      </select>
+
+      <label for="code_input" class="block text-sm font-medium text-slate-700">Paste Code</label>
+      <textarea id="code_input" name="code_input" required rows="18" class="w-full rounded-md border border-slate-300 p-3 font-mono text-sm" placeholder="Paste AI-generated code here..."></textarea>
+
+      <button id="submit-btn" type="submit" class="rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300">
+        Evaluate Code
+      </button>
+      <p id="loading-text" class="hidden text-sm text-slate-600">Processing... running 8 model checks in parallel.</p>
+    </form>
+  </main>
+  <script>
+    const form = document.getElementById("eval-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const loadingText = document.getElementById("loading-text");
+    form.addEventListener("submit", () => {
+      submitBtn.disabled = true;
+      loadingText.classList.remove("hidden");
+      submitBtn.textContent = "Evaluating...";
+    });
+  </script>
+</body>
+</html>
