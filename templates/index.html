@@ -14,6 +14,9 @@
     </div>
   </header>
   <main class="mx-auto max-w-5xl px-6 py-8">
+    <div class="mb-4">
+      <a href="/history" class="inline-flex items-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-300 hover:bg-slate-50">View Eval History</a>
+    </div>
     <form id="eval-form" action="/evaluate" method="post" class="space-y-4 rounded-xl bg-white p-6 shadow">
       {% if source_run %}
       <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
@@ -39,6 +42,15 @@
       </select>
 
       <label for="code_input" class="block text-sm font-medium text-slate-700">Paste Code</label>
+      {% if source_run %}
+      <div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
+        <p class="text-sm font-semibold text-amber-900">Re-eval Input Confirmation</p>
+        <p class="mt-1 text-sm text-amber-800">
+          The code in the field below is the candidate updated code for this re-evaluation run.
+          When you click <strong>Evaluate Code</strong>, AgentGrade will score this updated code (not the original run #{{ source_run.id }} code).
+        </p>
+      </div>
+      {% endif %}
       <textarea id="code_input" name="code_input" required rows="18" class="w-full rounded-md border border-slate-300 p-3 font-mono text-sm" placeholder="Paste AI-generated code here...">{{ prefilled_code if source_run else "" }}</textarea>
 
       <button id="submit-btn" type="submit" class="rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300">

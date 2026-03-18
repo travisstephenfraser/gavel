@@ -135,3 +135,17 @@ def get_dimension_scores(eval_run_id: int) -> list[dict[str, Any]]:
         item["audit_findings"] = json.loads(item["audit_findings"] or "[]")
         dimensions.append(item)
     return dimensions
+
+
+def get_eval_history(limit: int = 50) -> list[dict[str, Any]]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, created_at, language, overall_score, audit_agreement, status, previous_eval_run_id
+            FROM eval_runs
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+    return [dict(row) for row in rows]

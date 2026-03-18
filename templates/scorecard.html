@@ -165,10 +165,15 @@
   </header>
 
   <main class="app-ui mx-auto max-w-6xl space-y-8 px-6 py-10">
-    <section class="flex flex-wrap gap-3 print:hidden">
+    <section class="flex flex-wrap items-center gap-3 print:hidden">
       <a href="/" class="inline-flex items-center rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-900">Run New Eval</a>
-      <a href="/?from_run_id={{ eval_run.id }}&auto_fix=1" class="inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800">Fix &amp; Re-evaluate</a>
+      <a id="fix-reeval-link" href="/?from_run_id={{ eval_run.id }}&auto_fix=1" class="inline-flex items-center rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800">Fix &amp; Re-evaluate</a>
       <button type="button" id="print-btn" class="inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-300 hover:bg-slate-50">Print to PDF</button>
+      <a href="/history" class="ml-auto inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-300 hover:bg-slate-50">View History</a>
+    </section>
+    <section id="fix-loading-banner" class="hidden rounded-lg border border-emerald-200 bg-emerald-50 p-4 print:hidden">
+      <p class="text-sm font-semibold text-emerald-900">Generating adjusted code from remediation prompt...</p>
+      <p class="mt-1 text-sm text-emerald-800">This can take a few seconds.</p>
     </section>
 
     {% if previous_eval_run %}
@@ -301,9 +306,15 @@
 
       <div class="mt-7">
         <button id="copy-btn" class="inline-flex items-center rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">Copy Agent Prompt</button>
+        {% if previous_eval_run %}
+        <button id="copy-code-btn" class="ml-2 inline-flex items-center rounded-lg bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-800">Copy Improved Code</button>
+        {% endif %}
         <span id="copy-feedback" class="ml-3 text-sm font-medium text-emerald-700"></span>
       </div>
       <textarea id="agent-prompt" class="mt-4 h-52 w-full rounded-lg border border-slate-300 p-3 font-mono text-sm text-slate-800">{{ eval_run.agent_prompt }}</textarea>
+      {% if previous_eval_run %}
+      <textarea id="improved-code" class="hidden">{{ eval_run.code_input }}</textarea>
+      {% endif %}
     </section>
   </main>
 
@@ -353,13 +364,13 @@
         <tbody>
           <tr>
             <td><span class="badge badge-blue">Primary</span></td>
-            <td>gpt-4o</td>
+            <td>{{ primary_model }}</td>
             <td>Final dimension score source</td>
             <td>Score, justification, findings</td>
           </tr>
           <tr>
             <td><span class="badge badge-gray">Audit</span></td>
-            <td>gpt-4o-mini</td>
+            <td>{{ audit_model }}</td>
             <td>Independent confidence check</td>
             <td>Score, justification, findings</td>
           </tr>
@@ -474,12 +485,25 @@
 
   <script>
     const printBtn = document.getElementById("print-btn");
+    const fixReevalLink = document.getElementById("fix-reeval-link");
+    const fixLoadingBanner = document.getElementById("fix-loading-banner");
     const copyBtn = document.getElementById("copy-btn");
+    const copyCodeBtn = document.getElementById("copy-code-btn");
     const feedback = document.getElementById("copy-feedback");
     const prompt = document.getElementById("agent-prompt");
+    const improvedCode = document.getElementById("improved-code");
     if (printBtn) {
       printBtn.addEventListener("click", () => {
         window.print();
+      });
+    }
+    if (fixReevalLink) {
+      fixReevalLink.addEventListener("click", () => {
+        fixReevalLink.classList.add("pointer-events-none", "opacity-70");
+        fixReevalLink.textContent = "Generating Fix...";
+        if (fixLoadingBanner) {
+          fixLoadingBanner.classList.remove("hidden");
+        }
       });
     }
     if (copyBtn) {
@@ -487,6 +511,19 @@
         try {
           await navigator.clipboard.writeText(prompt.value);
           feedback.textContent = "Copied!";
+        } catch (err) {
+          feedback.textContent = "Copy failed. Please copy manually.";
+        }
+        window.setTimeout(() => {
+          feedback.textContent = "";
+        }, 1600);
+      });
+    }
+    if (copyCodeBtn && improvedCode) {
+      copyCodeBtn.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(improvedCode.value);
+          feedback.textContent = "Improved code copied!";
         } catch (err) {
           feedback.textContent = "Copy failed. Please copy manually.";
         }

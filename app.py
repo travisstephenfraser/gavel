@@ -1,4 +1,5 @@
 import json
+import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from flask import Flask, redirect, render_template, request, url_for
@@ -6,6 +7,7 @@ from flask import Flask, redirect, render_template, request, url_for
 from autofixer import generate_autofix_code
 from database import (
     create_eval_run,
+    get_eval_history,
     get_dimension_scores,
     get_eval_run,
     init_db,
@@ -27,6 +29,11 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "agentgrade-dev"
 load_env_file()
 init_db()
+
+PRIMARY_MODEL = os.getenv("PRIMARY_MODEL", "gpt-5.4")
+AUDIT_MODEL = os.getenv("AUDIT_MODEL", "gpt-5-mini")
+REMEDIATION_MODEL = os.getenv("REMEDIATION_MODEL", PRIMARY_MODEL)
+AUTOFIX_MODEL = os.getenv("AUTOFIX_MODEL", AUDIT_MODEL)
 
 
 @app.route("/", methods=["GET"])
@@ -54,6 +61,10 @@ def index():
         source_run=source_run,
         prefilled_code=prefilled_code,
         autofix_message=autofix_message,
+        primary_model=PRIMARY_MODEL,
+        audit_model=AUDIT_MODEL,
+        remediation_model=REMEDIATION_MODEL,
+        autofix_model=AUTOFIX_MODEL,
     )
 
 
@@ -71,10 +82,10 @@ def evaluate():
 
     with ThreadPoolExecutor(max_workers=8) as executor:
         primary_futures = {
-            executor.submit(run_eval, code_input, dim, "gpt-4o"): ("primary", dim[0]) for dim in DIMENSIONS
+            executor.submit(run_eval, code_input, dim, PRIMARY_MODEL, "primary"): ("primary", dim[0]) for dim in DIMENSIONS
         }
         audit_futures = {
-            executor.submit(run_eval, code_input, dim, "gpt-4o-mini"): ("audit", dim[0]) for dim in DIMENSIONS
+            executor.submit(run_eval, code_input, dim, AUDIT_MODEL, "audit"): ("audit", dim[0]) for dim in DIMENSIONS
         }
         all_futures = {**primary_futures, **audit_futures}
 
@@ -135,6 +146,48 @@ def evaluate():
     return redirect(url_for("results", eval_run_id=eval_run_id))
 
 
+@app.route("/history", methods=["GET"])
+def history():
+    runs = get_eval_history(limit=60)
+    history_runs = []
+    for run in runs:
+        score = run.get("overall_score")
+        if isinstance(score, (int, float)):
+            score_pct = max(0, min(100, round((score / 5) * 100, 1)))
+            if score >= 4:
+                score_color = "bg-emerald-500"
+                score_badge = "bg-emerald-100 text-emerald-700"
+            elif score >= 3:
+                score_color = "bg-amber-500"
+                score_badge = "bg-amber-100 text-amber-700"
+            else:
+                score_color = "bg-red-500"
+                score_badge = "bg-red-100 text-red-700"
+        else:
+            score_pct = 0
+            score_color = "bg-slate-300"
+            score_badge = "bg-slate-100 text-slate-700"
+
+        agreement = run.get("audit_agreement")
+        if isinstance(agreement, (int, float)):
+            if agreement >= 90:
+                agreement_badge = "bg-emerald-100 text-emerald-700"
+            elif agreement >= 75:
+                agreement_badge = "bg-amber-100 text-amber-700"
+            else:
+                agreement_badge = "bg-red-100 text-red-700"
+        else:
+            agreement_badge = "bg-slate-100 text-slate-700"
+
+        run["score_pct"] = score_pct
+        run["score_color"] = score_color
+        run["score_badge"] = score_badge
+        run["agreement_badge"] = agreement_badge
+        history_runs.append(run)
+
+    return render_template("history.html", runs=history_runs)
+
+
 @app.route("/results/<int:eval_run_id>", methods=["GET"])
 def results(eval_run_id: int):
     eval_run = get_eval_run(eval_run_id)
@@ -185,6 +238,10 @@ def results(eval_run_id: int):
         previous_dimensions=previous_dimensions,
         score_deltas=score_deltas,
         overall_delta=overall_delta,
+        primary_model=PRIMARY_MODEL,
+        audit_model=AUDIT_MODEL,
+        remediation_model=REMEDIATION_MODEL,
+        autofix_model=AUTOFIX_MODEL,
     )
 
 
