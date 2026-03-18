@@ -1,8 +1,12 @@
 ﻿# Gavel
 
-Gavel is a quality gate for AI-generated code.
+Gavel is a quality gate for AI-generated code. 
 
-It evaluates code across four dimensions using a primary and audit model, reconciles confidence, generates executable remediation instructions, and supports an in-app closed loop for fix + re-evaluation.
+AI coding is exploding, especially among vibe-coders and non-engineers. The gap between AI generated code and quality, audited, and safe code is growing, specifically among the increasing number of non-technical vide-coders.
+
+Gavel closes that gap.
+
+It evaluates code across four dimensions using a primary and audit model, reconciles confidence, calculates clear scorecards, generates executable remediation instructions, and supports an in-app closed loop for fix and re-evaluation.
 
 ## What It Does
 
